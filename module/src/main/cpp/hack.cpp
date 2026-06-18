@@ -1,6 +1,6 @@
 //
 // Created by Perfare on 2020/7/4.
-// Modified: Target liblogic.so for MLBB US
+// Modified: Target liblogic.so for MLBB US (via /proc/self/maps)
 //
 
 #include "hack.h"
@@ -37,7 +37,6 @@ void hack_start(const char *game_data_dir) {
                     
                     if (base != 0) {
                         load = true;
-                        // Inisialisasi Il2Cpp dengan base address
                         il2cpp_api_init((void*)base);
                         il2cpp_dump(game_data_dir);
                         fclose(fp);
