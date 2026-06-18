@@ -1,6 +1,5 @@
 //
 // Created by Perfare on 2020/7/4.
-// Modified: Target libcsharp.so for MLBB US
 //
 
 #include "hack.h"
@@ -20,37 +19,19 @@
 
 void hack_start(const char *game_data_dir) {
     bool load = false;
-    
-    for (int i = 0; i < 30; i++) {
-        FILE* fp = fopen("/proc/self/maps", "r");
-        if (fp) {
-            char line[512];
-            while (fgets(line, sizeof(line), fp)) {
-                if (strstr(line, "libcsharp.so")) {
-                    LOGI("Found libcsharp.so in maps: %s", line);
-                    
-                    unsigned long base_addr = 0;
-                    sscanf(line, "%lx-", &base_addr);
-                    uintptr_t base = (uintptr_t)base_addr;
-                    
-                    LOGI("libcsharp.so base: 0x%lx", base_addr);
-                    
-                    if (base != 0) {
-                        load = true;
-                        il2cpp_api_init((void*)base);
-                        il2cpp_dump(game_data_dir);
-                        fclose(fp);
-                        return;
-                    }
-                }
-            }
-            fclose(fp);
+    for (int i = 0; i < 10; i++) {
+        void *handle = xdl_open("libil2cpp.so", 0);
+        if (handle) {
+            load = true;
+            il2cpp_api_init(handle);
+            il2cpp_dump(game_data_dir);
+            break;
+        } else {
+            sleep(1);
         }
-        sleep(1);
     }
-    
     if (!load) {
-        LOGI("libcsharp.so not found in thread %d", gettid());
+        LOGI("libil2cpp.so not found in thread %d", gettid());
     }
 }
 
