@@ -1,5 +1,6 @@
 //
 // Created by Perfare on 2020/7/4.
+// Modified to target liblogic.so
 //
 
 #include "hack.h"
@@ -20,7 +21,8 @@
 void hack_start(const char *game_data_dir) {
     bool load = false;
     for (int i = 0; i < 10; i++) {
-        void *handle = xdl_open("libil2cpp.so", 0);
+        // UBAH DI SINI: Mencari liblogic.so, bukan libil2cpp.so
+        void *handle = xdl_open("liblogic.so", 0);
         if (handle) {
             load = true;
             il2cpp_api_init(handle);
@@ -31,7 +33,8 @@ void hack_start(const char *game_data_dir) {
         }
     }
     if (!load) {
-        LOGI("libil2cpp.so not found in thread %d", gettid());
+        // Log juga diubah agar sesuai jika gagal
+        LOGI("liblogic.so not found in thread %d", gettid());
     }
 }
 
