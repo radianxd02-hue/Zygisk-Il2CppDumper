@@ -20,37 +20,38 @@
 
 void hack_start(const char *game_data_dir) {
     bool load = false;
-    
-    // Daftar kemungkinan lokasi dan nama library
-    const char* targets[] = {
-        "/data/user/0/com.mobile.legends.usa/app_libs/liblogic.so",
-        "/data/data/com.mobile.legends.usa/app_libs/liblogic.so",
-        "/data/user/0/com.mobile.legends/app_libs/liblogic.so",
-        "liblogic.so",
-        "libil2cpp.so"
-    };
-    
-    LOGI("Memulai pencarian library target...");
-    
-    for (int i = 0; i < 20; i++) {
-        for (const char* path : targets) {
-            void *handle = xdl_open(path, 0);
-            if (handle) {
-                LOGI("Berhasil menemukan library di: %s", path);
-                load = true;
-                il2cpp_api_init(handle);
-                il2cpp_dump(game_data_dir);
-                break;
+    LOGI("Memulai pencarian library via /proc/self/maps...");
+
+    for (int i = 0; i < 30; i++) {
+        FILE* fp = fopen("/proc/self/maps", "r");
+        if (fp) {
+            char line[256];
+            while (fgets(line, sizeof(line), fp)) {
+                // Mencari apakah liblogic.so sudah terpetakan di memori
+                if (strstr(line, "liblogic.so")) {
+                    LOGI("Ditemukan di maps: %s", line);
+                    // Dapatkan base address atau handle
+                    void *handle = xdl_open("liblogic.so", 0);
+                    if (handle) {
+                        load = true;
+                        il2cpp_api_init(handle);
+                        il2cpp_dump(game_data_dir);
+                        fclose(fp);
+                        goto end;
+                    }
+                }
             }
+            fclose(fp);
         }
-        if (load) break;
-        sleep(1); // Tunggu library dimuat oleh game
+        sleep(1);
     }
-    
+
+end:
     if (!load) {
-        LOGI("Gagal menemukan liblogic.so/libil2cpp.so di thread %d", gettid());
+        LOGI("Gagal menemukan liblogic.so di memori maps!");
     }
 }
+
 
 // --- Fungsi pendukung di bawah ini tidak berubah ---
 
