@@ -21,7 +21,6 @@
 void hack_start(const char *game_data_dir) {
     bool load = false;
     
-    // 🔥 Cari liblogic.so di /proc/self/maps
     for (int i = 0; i < 30; i++) {
         FILE* fp = fopen("/proc/self/maps", "r");
         if (fp) {
@@ -30,10 +29,12 @@ void hack_start(const char *game_data_dir) {
                 if (strstr(line, "liblogic.so")) {
                     LOGI("Found liblogic.so in maps: %s", line);
                     
-                    // Ambil base address dari maps
-                    uintptr_t base = 0;
-                    sscanf(line, "%lx-", &base);
-                    LOGI("liblogic.so base: 0x%lx", base);
+                    // 🔥 PERBAIKAN: Cast ke unsigned long untuk format %lx
+                    unsigned long base_addr = 0;
+                    sscanf(line, "%lx-", &base_addr);
+                    uintptr_t base = (uintptr_t)base_addr;
+                    
+                    LOGI("liblogic.so base: 0x%lx", base_addr);
                     
                     if (base != 0) {
                         load = true;
