@@ -20,18 +20,36 @@
 
 void hack_start(const char *game_data_dir) {
     bool load = false;
-    for (int i = 0; i < 10; i++) {
-        // 🔥 UBAH: Cari liblogic.so (bukan libil2cpp.so) untuk MLBB US
-        void *handle = xdl_open("liblogic.so", 0);
-        if (handle) {
-            load = true;
-            il2cpp_api_init(handle);
-            il2cpp_dump(game_data_dir);
-            break;
-        } else {
-            sleep(1);
+    
+    // 🔥 Cari liblogic.so di /proc/self/maps
+    for (int i = 0; i < 30; i++) {
+        FILE* fp = fopen("/proc/self/maps", "r");
+        if (fp) {
+            char line[512];
+            while (fgets(line, sizeof(line), fp)) {
+                if (strstr(line, "liblogic.so")) {
+                    LOGI("Found liblogic.so in maps: %s", line);
+                    
+                    // Ambil base address dari maps
+                    uintptr_t base = 0;
+                    sscanf(line, "%lx-", &base);
+                    LOGI("liblogic.so base: 0x%lx", base);
+                    
+                    if (base != 0) {
+                        load = true;
+                        // Inisialisasi Il2Cpp dengan base address
+                        il2cpp_api_init((void*)base);
+                        il2cpp_dump(game_data_dir);
+                        fclose(fp);
+                        return;
+                    }
+                }
+            }
+            fclose(fp);
         }
+        sleep(1);
     }
+    
     if (!load) {
         LOGI("liblogic.so not found in thread %d", gettid());
     }
