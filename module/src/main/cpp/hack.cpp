@@ -1,6 +1,6 @@
 //
 // Created by Perfare on 2020/7/4.
-// Modified: Target liblogic.so for MLBB US (via /proc/self/maps)
+// Modified: Target libcsharp.so for MLBB US
 //
 
 #include "hack.h"
@@ -26,15 +26,14 @@ void hack_start(const char *game_data_dir) {
         if (fp) {
             char line[512];
             while (fgets(line, sizeof(line), fp)) {
-                if (strstr(line, "liblogic.so")) {
-                    LOGI("Found liblogic.so in maps: %s", line);
+                if (strstr(line, "libcsharp.so")) {
+                    LOGI("Found libcsharp.so in maps: %s", line);
                     
-                    // 🔥 PERBAIKAN: Cast ke unsigned long untuk format %lx
                     unsigned long base_addr = 0;
                     sscanf(line, "%lx-", &base_addr);
                     uintptr_t base = (uintptr_t)base_addr;
                     
-                    LOGI("liblogic.so base: 0x%lx", base_addr);
+                    LOGI("libcsharp.so base: 0x%lx", base_addr);
                     
                     if (base != 0) {
                         load = true;
@@ -51,7 +50,7 @@ void hack_start(const char *game_data_dir) {
     }
     
     if (!load) {
-        LOGI("liblogic.so not found in thread %d", gettid());
+        LOGI("libcsharp.so not found in thread %d", gettid());
     }
 }
 
